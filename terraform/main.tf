@@ -43,4 +43,49 @@ resource "aws_subnet" "my_db_subnet_2" {
 resource "aws_internet_gateway" "my_db_igw" {
   vpc_id = aws_vpc.my_db_vpc.id
 
+  tags = {
+    Name = "my-db-igw"
+  }
+}
+
+###route table
+resource "aws_route_table" "my_db_rt" {
+  vpc_id = aws_vpc.my_db_vpc.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.my_db_igw.id
+  }
+
+  tags = {
+    Name = "my-db-rt"
+  }
+}
+
+###associate route table with subnet 1
+resource "aws_route_table_association" "my_db_rt_association_1" {
+  subnet_id = aws_subnet.my_db_subnet_1.id
+  route_table_id = aws_route_table.my_db_rt.id
+}
+
+###associate route table with subnet 2
+resource "aws_route_table_association" "my_db_rt_association_2" {
+  subnet_id = aws_subnet.my_db_subnet_2.id
+  route_table_id = aws_route_table.my_db_rt.id
+}
+
+###security group
+resource "aws_security_group" "my_db_sg" {
+  vpc_id = aws_vpc.my_db_vpc.id
+
+  ingress {
+    from_port = 3306
+    to_port = 3306
+    protocol = "tcp"
+    cidr_blocks = ["74.212.237.134/32"]
+    description = "Allow MySQL traffic from my IP"
+  }
+
+  tags = {
+    Name = "my-db-sg"
+  }
 }
